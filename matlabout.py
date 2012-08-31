@@ -1,7 +1,9 @@
 import sets
 import sqlite3
 import textwrap
-
+import tempfile, os, subprocess
+from git import *
+import sys
 
 def getappids(curs):
     rows = curs.execute("SELECT * FROM store_app WHERE href_name='matlab'")
@@ -57,3 +59,11 @@ def outputfile(db_filename):
     outlines = [x + "\n" for x in lines]
     with open('matlab.opt', 'w') as fileh:
         fileh.writelines(outlines)
+    repo = Repo(".")
+    index=repo.index
+    index.add(['matlab.opt'])
+    new_commit = index.commit("Updating matlab.opt")
+    repo.commit('master')
+
+if __name__ == '__main__':
+    outputfile(sys.argv[1])
