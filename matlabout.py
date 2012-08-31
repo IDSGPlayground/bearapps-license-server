@@ -60,10 +60,10 @@ def outputfile(db_filename):
     with open('matlab.opt', 'w') as fileh:
         fileh.writelines(outlines)
     repo = Repo(".")
-    index=repo.index
+    index = repo.index
     index.add(['matlab.opt'])
     new_commit = index.commit("Updating matlab.opt")
-    repo.commit('master')
+    repo.commit('master') #Need to set a remote!!!
 
 if __name__ == '__main__':
     outputfile(sys.argv[1])
