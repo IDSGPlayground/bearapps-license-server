@@ -2,25 +2,28 @@ import re
 import sets
 import sqlite3
 import textwrap
-import tempfile, os, subprocess
 import git
 import sys
+
 
 def getappids(curs):
     rows = curs.execute("SELECT * FROM store_app WHERE href_name='matlab'")
     matlabid = rows.fetchone()['id']
-    rows = curs.execute("SELECT * FROM store_app WHERE href_name='matlab-toolboxes'")
+    rows = curs.execute("SELECT * FROM store_app WHERE \
+            href_name='matlab-toolboxes'")
     toolboxesid = rows.fetchone()['id']
     return (matlabid, toolboxesid)
 
 
 def getuserids(curs, ids):
     userids = {'matlab': [], 'toolboxes': []}
-    rows = curs.execute("SELECT * FROM store_user_apps WHERE app_id=%s" % ids[0])
+    rows = curs.execute("SELECT * FROM store_user_apps WHERE \
+            app_id=%s" % ids[0])
     apps = rows.fetchall()
     for row in apps:
         userids['matlab'].append(row['user_id'])
-    rows = curs.execute("SELECT * FROM store_user_apps WHERE app_id=%s" % ids[1])
+    rows = curs.execute("SELECT * FROM store_user_apps WHERE \
+            app_id=%s" % ids[1])
     apps = rows.fetchall()
     for row in apps:
         userids['toolboxes'].append(row['user_id'])
@@ -39,7 +42,7 @@ def getusers(curs, userids):
     for i in toolboxuserset:
         row = curs.execute("SELECT * FROM store_user WHERE id=%s" % i)
         toolboxusers.append(row.fetchone()['name'])
-    return {'matlab':matlabusers, 'toolboxes':toolboxusers}
+    return {'matlab': matlabusers, 'toolboxes': toolboxusers}
 
 
 def outputfile(db_filename):
@@ -75,6 +78,7 @@ def outputfile(db_filename):
     repo = git.Repo("./src")
     index = repo.index
     index.add(['src/matlab.opt'])
+    commitmsg = []
     if len(madded) > 0:
         commitmsg.append("Added " + " ".join(madded) + " to matlabonly.")
     if len(tadded) > 0:
@@ -83,8 +87,7 @@ def outputfile(db_filename):
         commitmsg.append("Added " + " ".join(mremoved) + " from matlabonly.")
     if len(tremoved) > 0:
         commitmsg.append("Added " + " ".join(tremoved) + " from toolboxes.")
-    new_commit = index.commit(commitmsg)
-    repo.commit('master') #Need to set a remote!!!
+    index.commit("/n".join(commitmsg))  # Need to set a remote!!!
 
 if __name__ == '__main__':
     outputfile(sys.argv[1])
