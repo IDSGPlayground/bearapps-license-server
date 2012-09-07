@@ -1,8 +1,9 @@
+import re
 import sets
 import sqlite3
 import textwrap
 import tempfile, os, subprocess
-from git import *
+import git
 import sys
 
 def getappids(curs):
@@ -48,6 +49,14 @@ def outputfile(db_filename):
     curs = conn.cursor()
     users = getusers(curs, getuserids(curs, getappids(curs)))
     curs.close()
+    prevmatlab = sets.Set()
+    prevtoolboxes = sets.Set()
+    with open('src/matlab.opt', 'r') as fileh:
+        for line in fileh:
+            if re.match("GROUP matlabonly", line):
+                prevmatlab = sets.Set(line.split(" ")[2:-1])
+            elif re.match("GROUP toolboxes", line):
+                prevtoolboxes = sets.Set(line.split(" ")[2:-1])
     matlabline = "GROUP matlabonly " + " ".join(users['matlab'])
     toolboxesline = "GROUP toolboxes " + " ".join(users['toolboxes'])
     for x in textwrap.wrap(matlabline):
@@ -57,12 +66,24 @@ def outputfile(db_filename):
     lines.append("INCLUDEALL        GROUP toolboxes")
     lines.append("INCLUDE MATLAB    GROUP matlabonly")
     outlines = [x + "\n" for x in lines]
-    with open('matlab.opt', 'w') as fileh:
+    with open('src/matlab.opt', 'w') as fileh:
         fileh.writelines(outlines)
-    repo = Repo(".")
+    madded = sets.Set(users['matlab']).difference(prevmatlab)
+    tadded = sets.Set(users['toolboxes']).difference(prevtoolboxes)
+    mremoved = prevmatlab.difference(users['matlab'])
+    tremoved = prevtoolboxes.difference(users['toolboxes'])
+    repo = git.Repo("./src")
     index = repo.index
-    index.add(['matlab.opt'])
-    new_commit = index.commit("Updating matlab.opt")
+    index.add(['src/matlab.opt'])
+    if len(madded) > 0:
+        commitmsg.append("Added " + " ".join(madded) + " to matlabonly.")
+    if len(tadded) > 0:
+        commitmsg.append("Added " + " ".join(tadded) + " to toolboxes.")
+    if len(mremoved) > 0:
+        commitmsg.append("Added " + " ".join(mremoved) + " from matlabonly.")
+    if len(tremoved) > 0:
+        commitmsg.append("Added " + " ".join(tremoved) + " from toolboxes.")
+    new_commit = index.commit(commitmsg)
     repo.commit('master') #Need to set a remote!!!
 
 if __name__ == '__main__':

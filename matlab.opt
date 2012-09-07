@@ -1,4 +1,0 @@
-GROUP matlabonly
-GROUP toolboxes elizabeth doug
-INCLUDEALL        GROUP toolboxes
-INCLUDE MATLAB    GROUP matlabonly
