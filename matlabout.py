@@ -56,12 +56,12 @@ def outputfile(db_filename):
     curs.close()
     prevmatlab = sets.Set()
     prevtoolboxes = sets.Set()
-    with open('src/matlab.opt', 'r') as fileh:
+    with open('/usr/local/matlab/src/matlab.opt', 'r') as fileh:
         for line in fileh:
             if re.match("GROUP matlabonly", line):
-                prevmatlab = sets.Set(line.split(" ")[2:-1])
+                prevmatlab = sets.Set([x.strip() for x in line.split(" ")[2:]])
             elif re.match("GROUP toolboxes", line):
-                prevtoolboxes = sets.Set(line.split(" ")[2:-1])
+                prevtoolboxes = sets.Set([x.strip() for x in line.split(" ")[2:]])
     matlabline = "GROUP matlabonly " + " ".join(users['matlab'])
     toolboxesline = "GROUP toolboxes " + " ".join(users['toolboxes'])
     for x in textwrap.wrap(matlabline):
@@ -71,25 +71,25 @@ def outputfile(db_filename):
     lines.append("INCLUDEALL        GROUP toolboxes")
     lines.append("INCLUDE MATLAB    GROUP matlabonly")
     outlines = [x + "\n" for x in lines]
-    with open('src/matlab.opt', 'w') as fileh:
+    with open('/usr/local/matlab/src/matlab.opt', 'w') as fileh:
         fileh.writelines(outlines)
     madded = sets.Set(users['matlab']).difference(prevmatlab)
     tadded = sets.Set(users['toolboxes']).difference(prevtoolboxes)
     mremoved = prevmatlab.difference(users['matlab'])
     tremoved = prevtoolboxes.difference(users['toolboxes'])
-    repo = git.Repo("./src")
+    repo = git.Repo("/usr/local/matlab/src")
     index = repo.index
-    index.add(['src/matlab.opt'])
+    index.add(['/usr/local/matlab/src/matlab.opt'])
     commitmsg = []
     if len(madded) > 0:
         commitmsg.append("Added " + " ".join(madded) + " to matlabonly.")
     if len(tadded) > 0:
         commitmsg.append("Added " + " ".join(tadded) + " to toolboxes.")
     if len(mremoved) > 0:
-        commitmsg.append("Added " + " ".join(mremoved) + " from matlabonly.")
+        commitmsg.append("Removed " + " ".join(mremoved) + " from matlabonly.")
     if len(tremoved) > 0:
-        commitmsg.append("Added " + " ".join(tremoved) + " from toolboxes.")
-    index.commit("/n".join(commitmsg))  # Need to set a remote!!!
+        commitmsg.append("Removed " + " ".join(tremoved) + " from toolboxes.")
+    index.commit(" ".join(commitmsg))  # Need to set a remote!!!
 
 if __name__ == '__main__':
     outputfile(sys.argv[1])
