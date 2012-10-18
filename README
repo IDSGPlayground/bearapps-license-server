@@ -1,3 +1,17 @@
 Usage:
 
 matlabout.py <name of db file from bearapps>
+matlablistener.py
+
+matlablistener opens a zmq subscriber socket on localhost:23272 which listens for
+publishes starting with the word 'matlab' and will regenerate the matlab.opt file from
+the bearapps database when the message is received. Once the file is generated, it
+is checked into git, and then copied to /usr/local/matlab/etc,
+
+Pre-requisites:
+
+The /usr/local/matlab/src directory must exist and be a git repository.
+The /usr/local/matlab/src/matlab.opt file must exist.
+Depends on build-essential and python-dev.
+Also depends on the pip packages gitpython and pyzmq.
+
